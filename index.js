@@ -1,14 +1,13 @@
-// api/server.js
 require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 
 const app = express();
+const PORT = process.env.PORT || 3001;
 const MAL_CLIENT_ID = process.env.MAL_CLIENT_ID;
 
-app.use(cors());
-app.use(express.json());
+app.use(cors()); // agar bisa diakses dari React Native
 
 app.get("/", async (req, res) => {
   let { year, season, limit, offset } = req.query;
@@ -16,11 +15,12 @@ app.get("/", async (req, res) => {
   limit = parseInt(limit) || 50;
 
   const now = new Date();
-  if (!year) {
-    year = now.getFullYear();
+  if(!year){
+      year = now.getFullYear();
   }
   if (!season) {
     const month = now.getMonth() + 1;
+  
     if (month >= 3 && month <= 5) {
       season = 'spring';
     } else if (month >= 6 && month <= 8) {
@@ -31,6 +31,8 @@ app.get("/", async (req, res) => {
       season = 'winter';
     }
   }
+
+  console.log('Request Endpoint "/" :',year, season, limit);
 
   try {
     const response = await axios.get(
@@ -43,9 +45,13 @@ app.get("/", async (req, res) => {
     );
 
     res.json(response.data);
+    console.log(response.data);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch anime data" });
+    console.error("Error fetching data from MAL:", error.message);
+    res.status(500).json({ error: "Failed to fetch anime data from MAL" });
   }
 });
 
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
